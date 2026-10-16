@@ -1,0 +1,1126 @@
+{
+  "name": "Calendario WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Antes de ativar\n\n1. No nó Chat Model, selecione a credencial e modelo desejado.\n2. Nos quatro nós do Google Calendar, conecte a mesma credencial Google Calendar OAuth2. A agenda usada é a principal da conta (`primary`).\n3. Crie uma credencial Header Auth com o nome do header `apikey` e a chave da Evolution API. Selecione essa credencial no nó Enviar WhatsApp.\n4. Na Evolution, envie o evento MESSAGES_UPSERT para `http://localhost:5678/webhook/whatsapp`.\n5. Ative este workflow.\n\nOs compromissos ficam na conta Google conectada. Reiniciar o Docker não apaga a agenda.",
+        "height": 304,
+        "width": 560,
+        "color": 4
+      },
+      "id": "f1d28bb8-ec86-4ba7-8ae8-cf10368afbad",
+      "name": "Como configurar",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_message }}",
+        "options": {
+          "systemMessage": "=Você é um assistente de calendário pessoal, gentil, prestativo e conversacional. Fale sempre em português brasileiro, utilizando uma linguagem natural, leve e amigável, como alguém que ajuda o usuário a organizar sua rotina no dia a dia.\n\nEstilo de comunicação:\n\nSeja simpático e direto, sem parecer robótico ou excessivamente formal.\n\nUse frases naturais e fluidas, evitando respostas mecânicas ou repetitivas.\n\nUtilize o nome do usuário ({{ $json.user_name }})  apenas quando fizer sentido na conversa. Nunca o mencione em todas as respostas nem o utilize sem necessidade.\n\nDemonstre disposição para ajudar, utilizando expressões naturais como \"Claro!\", \"Combinado!\", \"Sem problemas!\" e \"Vamos organizar isso\".\n\nEvite exagerar nas saudações, nos elogios, nas exclamações ou na cordialidade artificial.\n\nAdapte o tamanho da resposta à situação. Prefira respostas curtas para confirmações simples e respostas mais detalhadas quando necessário.\n\nComportamento como assistente de calendário:\n\nAjude o usuário a criar, consultar, atualizar e cancelar eventos e compromissos.\n\nConfirme as ações realizadas de maneira clara e natural, destacando as informações relevantes, como data, horário e título do evento.\n\nAo conversar sobre compromissos, priorize a praticidade e a clareza.\n\nSe faltar alguma informação necessária para executar uma ação, faça uma pergunta objetiva e amigável.\n\nNão repita informações que o usuário já forneceu, a menos que seja necessário para confirmar uma ação.\n\nNunca afirme que criou, alterou ou cancelou um evento sem que a operação tenha sido efetivamente concluída.\n\nObjetivo principal: fazer com que o usuário sinta que está conversando com um assistente pessoal acessível e eficiente, e não com um sistema automatizado que apenas executa comandos.\n\nAgora: {{ $now.setZone('America/Sao_Paulo').setLocale('pt-BR').toFormat('cccc, dd/LL/yyyy HH:mm') }} (horário de Brasília, UTC-3).\nA agenda é o Google Calendar. Use só estas ferramentas: listar_eventos, criar_evento, alterar_evento e apagar_evento.\nSe a pessoa só estiver conversando, responda em texto, sem ferramenta.\nHoje, amanhã e dias da semana você calcula a partir do agora. Não peça para confirmar a data.\nDatas nas ferramentas vão em ISO 8601 com offset -03:00.\nAntes de criar, chame listar_eventos no mesmo intervalo. Se já houver compromisso cruzando o horário, conte o conflito e só chame criar_evento depois que a pessoa confirmar.\nSe o fim não for dito, o fim é uma hora depois do início.\nPara alterar ou apagar, use o id do evento. Se não souber o id, liste antes, mas não envie o id para o usuário. \nAo alterar, repita título, início e fim quando eles não mudarem.\nDepois da ferramenta, confirme em uma frase curta, com dia, hora e id. \nEm caso de não conseguir realizar alguma operação por algum motivo, peça desculpas e fale que não pôde realizar a operação e incentive o usuário a tentar novamente ou fazer outra operação.\n\nClassificação e preparação para compromissos\n\nQuando o usuário criar, consultar ou conversar sobre um compromisso, identifique o tipo de evento com base nas informações disponíveis.\n\nCategorias possíveis:\n\nReunião\n\nEstudo\n\nViagem\n\nEntrevista\n\nConsulta\n\nTarefa pessoal\n\nEvento social\n\nOutro\n\nNão force uma classificação quando não houver informações suficientes. Nesse caso, utilize \"Outro\" ou uma categoria genérica adequada.\n\nBriefing de preparação\n\nQuando for útil para o usuário, ofereça ou produza um briefing curto e contextualizado para ajudá-lo a se preparar para o compromisso.\n\nO briefing deve:\n\nExplicar brevemente o objetivo aparente do compromisso.\n\nSugerir de 2 a 4 pontos práticos de preparação, conforme o contexto.\n\nConsiderar o título, a descrição, a data e outras informações realmente disponíveis.\n\nSer objetivo, personalizado ao contexto e fácil de ler pelo WhatsApp.\n\nDistinguir fatos conhecidos de sugestões.\n\nNão invente participantes, locais, pautas, documentos ou informações que não foram fornecidos. Se houver pouca informação, faça sugestões genéricas e úteis, sem apresentá-las como fatos.\n\nNão gere um briefing longo para compromissos simples ou quando isso não trouxer benefício. Se o usuário solicitar apenas criar um evento, priorize a criação e a confirmação do compromisso, sem acrescentar conteúdo desnecessário.\n\n",
+          "maxIterations": 6
+        }
+      },
+      "id": "63083d30-3af4-4230-8de0-6db9d037b78c",
+      "name": "Agente de calendario",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1296,
+        352
+      ],
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Lista compromissos do Google Calendar que cruzam o intervalo. Use para dizer a agenda ou conferir se o horário está livre.",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "limit": 20,
+        "timeMin": "={{ $fromAI('timeMin', 'Inicio do intervalo em ISO 8601 com offset -03:00', 'string') }}",
+        "timeMax": "={{ $fromAI('timeMax', 'Fim do intervalo em ISO 8601 com offset -03:00', 'string') }}",
+        "options": {
+          "recurringEventHandling": "expand",
+          "timeZone": {
+            "__rl": true,
+            "mode": "id",
+            "value": "America/Sao_Paulo"
+          }
+        }
+      },
+      "id": "202a7336-a334-4767-8ec8-a3d38e8f843f",
+      "name": "listar_eventos",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1536,
+        656
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ulEHSUQQJ6taF0fi",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Cria um compromisso no Google Calendar. Use só quando a pessoa pedir para marcar e você já tiver título e início. Se o fim não for dito, use uma hora de duração.",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "start": "={{ $fromAI('start', 'Inicio em ISO 8601 com offset -03:00', 'string') }}",
+        "end": "={{ $fromAI('end', 'Fim em ISO 8601 com offset -03:00. Uma hora depois do inicio se a pessoa nao disser o fim.', 'string') }}",
+        "additionalFields": {
+          "description": "={{ $fromAI('description', 'Observacao curta, se a pessoa informar. Vazio se nao houver.', 'string', \"\") }}",
+          "location": "={{ $fromAI('location', 'Local, se a pessoa informar. Vazio se nao houver.', 'string', \"\") }}",
+          "summary": "={{ $fromAI('summary', 'Titulo do compromisso', 'string') }}"
+        }
+      },
+      "id": "13b880d2-e16d-4c42-941b-ba9486d396e3",
+      "name": "criar_evento",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        640
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ulEHSUQQJ6taF0fi",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Altera um compromisso existente no Google Calendar pelo id. Se nao souber o id, liste antes. Repita titulo, inicio e fim quando eles nao mudarem.",
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "eventId": "={{ $fromAI('eventId', 'Id do evento no Google Calendar', 'string') }}",
+        "updateFields": {
+          "description": "={{ $fromAI('description', 'Observacao. Repita a atual ou deixe vazio.', 'string', \"\") }}",
+          "end": "={{ $fromAI('end', 'Fim em ISO 8601 com offset -03:00. Repita o atual se nao mudar.', 'string') }}",
+          "location": "={{ $fromAI('location', 'Local. Repita o atual ou deixe vazio.', 'string', \"\") }}",
+          "start": "={{ $fromAI('start', 'Inicio em ISO 8601 com offset -03:00. Repita o atual se nao mudar.', 'string') }}",
+          "summary": "={{ $fromAI('summary', 'Titulo. Repita o atual se nao mudar.', 'string') }}"
+        }
+      },
+      "id": "70409673-14b0-44fc-8abc-2633b5d9ca2a",
+      "name": "alterar_evento",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1760,
+        624
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ulEHSUQQJ6taF0fi",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Apaga um compromisso do Google Calendar pelo id. Use quando a pessoa pedir para cancelar. Se nao souber o id, liste antes.",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "eventId": "={{ $fromAI('eventId', 'Id do evento no Google Calendar', 'string') }}",
+        "options": {
+          "sendUpdates": "none"
+        }
+      },
+      "id": "bdd92c06-bfd1-43e5-995c-fa226f9be98c",
+      "name": "apagar_evento",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1888,
+        608
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ulEHSUQQJ6taF0fi",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        368
+      ],
+      "id": "8df05a64-a883-42f7-86cd-600dd49643b9",
+      "name": "EvolutionAPI",
+      "webhookId": "4df6dd95-eb80-4ba3-a830-74e95e0aa89c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95c62926-ccd4-4877-8c32-3cd6568ed146",
+              "name": "user_contact",
+              "value": "={{ $json.body.data.key.remoteJid.replace(\"@s.whatsapp.net\", \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "1c44df76-b277-4434-bec6-92ef38555367",
+              "name": "user_message",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            },
+            {
+              "id": "c6e087a7-fa71-4698-ac3f-36af45634232",
+              "name": "user_name",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "13a2b2f9-519c-41f8-b4c2-65cc33c8a769",
+              "name": "instance",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        608,
+        368
+      ],
+      "id": "22bbfd69-4afc-406a-99a9-f601d9095e2f",
+      "name": "Filtro de dados"
+    },
+    {
+      "parameters": {
+        "model": "grok-4.3",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        656
+      ],
+      "id": "57efea37-a2cb-48a7-b3f2-0611cb326608",
+      "name": "xAI Grok Chat Model",
+      "credentials": {
+        "xAiApi": {
+          "id": "tPXYujsDLSarS1Jt",
+          "name": "xAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO agent_errors (instance, user_contact, user_name, user_message, error_message, error_description)\nVALUES ($1, $2, $3, $4, $5, $6);",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Filtro de dados').first().json.instance,\n  $('Filtro de dados').first().json.user_contact,\n  $('Filtro de dados').first().json.user_name,\n  $('Filtro de dados').first().json.user_message,\n  typeof $json.error === 'string' ? $json.error : ($json.error?.message || $json.message || ''),\n  (typeof $json.error === 'object' && $json.error) ? ($json.error.description || $json.error.stack || '') : ''\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2016,
+        368
+      ],
+      "id": "01eaf0f5-ee76-4f43-a2c8-75a3da30a798",
+      "name": "Registrar erro do agente",
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Selecione a credencial Postgres do banco que você vai usar. A tabela agent_errors precisa existir antes."
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.user_contact }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        1296,
+        640
+      ],
+      "id": "e5d0d041-fba4-4f2a-9863-7ccfb34043c1",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "12c6fcf2-4226-4d1a-8eab-5a2bf31ed557",
+      "name": "A cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b0e5f704-bd88-4f5b-c134-60729d0aeaf3",
+              "leftValue": "={{ $json.already_sent }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "597fc24b-a81d-4bae-bb37-39b09d101eaf",
+      "name": "Seguir se novo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1888,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Filtro de dados').item.json.instance }}",
+        "remoteJid": "={{ $('Filtro de dados').item.json.user_contact }}",
+        "messageText": "=Olá, {{ $('Filtro de dados').item.json.user_name }}. Verifiquei que você não faz parte dos nossos clientes. Mas não se preocupe, para realizar seu cadastro digite 1 ",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        160
+      ],
+      "id": "47a1ba9c-0a55-4144-ab05-ec696022745f",
+      "name": "Usuário não é nosso cliente",
+      "credentials": {
+        "evolutionApi": {
+          "id": "DSA6iAp6yLZgwv2O",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Filtro de dados').item.json.instance }}",
+        "remoteJid": "={{ $('Filtro de dados').item.json.user_contact }}",
+        "messageText": "O sistema apresentou um erro e nossa equipe já foi notificada. Por favor, tente novamente.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        368
+      ],
+      "id": "54d47a7d-3fdf-46d4-8258-c24df08eda28",
+      "name": "Sistema apresentou erro",
+      "credentials": {
+        "evolutionApi": {
+          "id": "DSA6iAp6yLZgwv2O",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b0e5f704-bd88-4f5b-c134-60729d0aeaf3",
+              "leftValue": "={{ $json.is_active }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0cccd0f6-bf1a-4e07-9dea-01e786868ca5",
+      "name": "É nosso cliente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM users\nWHERE number = $1;",
+        "options": {
+          "queryReplacement": "={{ String($json.user_contact) }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        832,
+        368
+      ],
+      "id": "6420b70d-a337-4635-9472-f426978e89f4",
+      "name": "Verifica se o usuário é nosso cliente",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Filtro de dados').item.json.instance }}",
+        "remoteJid": "={{ $('Filtro de dados').item.json.user_contact }}",
+        "messageText": "={{ $json.output }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        224
+      ],
+      "id": "e3f4ac0e-567c-4a2d-891d-8465dca54316",
+      "name": "Fluxo realizado com sucesso",
+      "credentials": {
+        "evolutionApi": {
+          "id": "DSA6iAp6yLZgwv2O",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM users\nWHERE is_active = $1;",
+        "options": {
+          "queryReplacement": "=TRUE"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        624,
+        1104
+      ],
+      "id": "de603b10-b29e-4034-8723-c4cf5552e082",
+      "name": "Verifica usuários ativos",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        912,
+        1104
+      ],
+      "id": "73163fec-235e-4d97-8bca-4ae5444786ed",
+      "name": "Para cada usuário ativo"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.email }}",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.setZone('America/Recife').toISO() }}",
+        "timeMax": "={{ $now.setZone('America/Recife').plus({ minutes: 35 }).toISO() }}",
+        "options": {
+          "recurringEventHandling": "expand",
+          "timeZone": {
+            "__rl": true,
+            "mode": "id",
+            "value": "America/Recife"
+          }
+        }
+      },
+      "id": "b704ce5d-29e6-4837-97af-c300f1abf4dd",
+      "name": "Eventos do usuário",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        1120
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ulEHSUQQJ6taF0fi",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst instance = \"Agent_Calendar\";\nconst now = DateTime.now().setZone('America/Recife');\nconst due = [];\n\nfor (const item of $input.all()) {\n  const ev = item.json;\n\n  if (!ev || ev.status === 'cancelled') continue;\n\n  const start = ev.start || {};\n  if (!start.dateTime) continue;\n\n  const startDt = DateTime.fromISO(start.dateTime)\n    .setZone('America/Recife');\n\n  if (!startDt.isValid) continue;\n\n  const reminderAt = startDt.minus({ minutes: 30 });\n\n  if (now < reminderAt || now >= startDt) continue;\n\n  const title = ev.summary || 'Compromisso';\n  const description = ev.description || '';\n\n  due.push({\n    json: {\n      eventId: String(ev.id),\n      occurrenceStart: startDt.toISO(),\n      summary: title,\n      description: description,\n      category: '',\n      instance: instance,\n      eventDate: startDt.toFormat(\"dd/LL/yyyy\"),\n      eventTime: startDt.toFormat(\"HH:mm\"),\n      text: `${title} começa às ${startDt.toFormat('HH:mm')}.`,\n    },\n  });\n}\n\nreturn due;\n"
+      },
+      "id": "2921c780-d65d-4d11-aaae-2bef23ef9e90",
+      "name": "Verifica eventos próximos e válidos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  $1::text AS event_id,\n  $2::timestamptz AS occurrence_start,\n  $3::text AS summary,\n  $4::text AS text,\n  EXISTS (\n    SELECT 1 FROM reminder_sent r\n    WHERE r.event_id = $1 AND r.occurrence_start = $2::timestamptz\n  ) AS already_sent;",
+        "options": {
+          "queryReplacement": "={{ [\n  $json.eventId,\n  $json.occurrenceStart,\n  $json.summary,\n  $json.text\n] }}"
+        }
+      },
+      "id": "b8d83298-7a41-4fcd-8587-9801f4f786a7",
+      "name": "Ja enviado?",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1680,
+        1120
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Verifica eventos próximos e válidos').item.json.instance }}",
+        "remoteJid": "={{ $('Verifica usuários ativos').item.json.number }}",
+        "messageText": "=\n{{\n  $json.whatsapp_text\n  + '\\n\\n📌 Categoria: ' + $json.category\n  + '\\n\\n📝 Para se preparar:\\n' + $json.briefing\n}}\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        1120
+      ],
+      "id": "230b38ce-4b20-4d4d-b9ed-9ef3d7361791",
+      "name": "Enviar lembrete",
+      "credentials": {
+        "evolutionApi": {
+          "id": "DSA6iAp6yLZgwv2O",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO reminder_sent (event_id, occurrence_start, message_id, summary, number)\nVALUES ($1, $2::timestamptz, $3, $4, $5);",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Ja enviado?').item.json.event_id,\n  $('Ja enviado?').item.json.occurrence_start,\n  $json.key?.id || '',\n  $('Ja enviado?').item.json.summary,\n  $('Ja enviado?').item.json.number\n] }}"
+        }
+      },
+      "id": "0493cdfd-3356-42ef-812b-46d1af382c00",
+      "name": "Registrar envio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3280,
+        1360
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        1312
+      ],
+      "id": "aacc66af-3a3b-4664-be17-0137f481d05e",
+      "name": "xAI Grok Chat Model1",
+      "credentials": {
+        "xAiApi": {
+          "id": "MoQvuvbnu8zrBB06",
+          "name": "False"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Verifica usuários ativos').item.json.number }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        2224,
+        1312
+      ],
+      "id": "c51e4675-0533-4975-952d-c191626b4c4a",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\nDados do compromisso:\n\nTítulo: {{ $json.summary }}\nDescrição: {{ $('Verifica eventos próximos e válidos').item.json.description }}\nData: {{ $json.eventDate }}\nHorário: {{ $json.eventTime }}\n\nPrepare o briefing e os conteúdos do lembrete com base nesses dados.\n",
+        "options": {
+          "systemMessage": "Você é um assistente pessoal responsável por preparar lembretes de compromissos.\n\nAnalise os dados do evento recebidos e produza:\n1. Uma categoria adequada para o compromisso.\n2. Um briefing curto e contextualizado para ajudar o usuário a se preparar.\n3. Uma mensagem amigável para enviar pelo WhatsApp.\n4. Uma descrição visual para um card temático relacionado ao compromisso.\n\nRegras:\n- Responda em português brasileiro.\n- Não invente informações que não estejam nos dados do evento.\n- Use o título e a descrição para identificar o contexto do compromisso.\n- O briefing deve ser breve e conter até 3 sugestões práticas, quando forem úteis.\n- Se não houver contexto suficiente, produza um briefing genérico, sem presumir detalhes.\n- A descrição visual deve orientar a criação de uma imagem temática, sem depender de textos escritos dentro dela.\n- Não afirme que enviou mensagens ou imagens.\n- Retorne somente JSON válido, sem Markdown, com os campos category, briefing, whatsapp_text e visual_prompt.",
+          "maxIterations": 6
+        }
+      },
+      "id": "9cebfebc-166e-47fd-a471-bc71dafdf7d8",
+      "name": "Geração de briefing e card visual",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2176,
+        1136
+      ],
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst item = $input.item.json;\n\n// Identifica onde está o resultado da IA\nlet data = item.output ?? item;\n\n// Se a saída vier como texto, converte para objeto JSON\nif (typeof data === 'string') {\n  // Remove cercas Markdown, caso existam\n  data = data\n    .replace(/^```(?:json)?\\s*/i, '')\n    .replace(/\\s*```$/, '')\n    .trim();\n\n  data = JSON.parse(data);\n}\n\n// Retorna os campos separados e preserva os dados originais\nreturn {\n  json: {\n    ...item,\n    category: data.category,\n    briefing: data.briefing,\n    whatsapp_text: data.whatsapp_text,\n    visual_prompt: data.visual_prompt,\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        1120
+      ],
+      "id": "5e5b0661-4d97-48b1-9dcc-69f9cb478e30",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Verifica eventos próximos e válidos').item.json.instance }}",
+        "remoteJid": "={{ $('Verifica usuários ativos').item.json.number }}",
+        "messageText": "=Olá, {{ $('Verifica usuários ativos').item.json.name }}! 😊\n\n🔔 *Passando para te lembrar que seu compromisso está chegando!*\n\n📌 *{{ $('Verifica eventos próximos e válidos').item.json.summary }}*\n\n📝 {{ $('Verifica eventos próximos e válidos').item.json.description || 'Não há uma descrição adicional para este compromisso.' }}\n\n📅 *Data:* {{ $('Verifica eventos próximos e válidos').item.json.eventDate }}\n🕒 *Horário:* {{ $('Verifica eventos próximos e válidos').item.json.eventTime }}\n\nEspero que dê tudo certo! 😊",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        1312
+      ],
+      "id": "13798ab7-23bb-4e4d-8aa2-c9d3b7e97522",
+      "name": "Enviar padrão sobre o lembrete",
+      "credentials": {
+        "evolutionApi": {
+          "id": "DSA6iAp6yLZgwv2O",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO reminder_sent (event_id, occurrence_start, message_id, summary, number)\nVALUES ($1, $2::timestamptz, $3, $4, $5);",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Ja enviado?').item.json.event_id,\n  $('Ja enviado?').item.json.occurrence_start,\n  $json.key?.id || '',\n  $('Ja enviado?').item.json.summary,\n  $('Ja enviado?').item.json.number\n] }}"
+        }
+      },
+      "id": "690c81ca-2f6c-4fa3-9b02-74fafac657e0",
+      "name": "Registrar envio1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2944,
+        1360
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO agent_errors (instance, user_contact, user_name, user_message, error_message, error_description)\nVALUES ($1, $2, $3, $4, $5, $6);",
+        "options": {
+          "queryReplacement": "=\n{{ [\n  $('Verifica eventos próximos e válidos').item.json.instance,\n  $('Verifica usuários ativos').item.json.number,\n  $('Verifica usuários ativos').item.json.name,\n  'mensagem automática dos lembretes',\n  typeof $json.error === 'string'\n    ? $json.error\n    : ($json.error?.message || $json.message || ''),\n  (typeof $json.error === 'object' && $json.error)\n    ? ($json.error.description || $json.error.stack || '')\n    : ''\n] }}\n"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2528,
+        1216
+      ],
+      "id": "b29e8815-71c1-4cd4-8ab3-bd938584ec4d",
+      "name": "Registrar erro do agente1",
+      "credentials": {
+        "postgres": {
+          "id": "zS19hZvIhhGP8qhU",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Selecione a credencial Postgres do banco que você vai usar. A tabela agent_errors precisa existir antes."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Agente de calendario": {
+      "main": [
+        [
+          {
+            "node": "Fluxo realizado com sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar erro do agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "listar_eventos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "alterar_evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "apagar_evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EvolutionAPI": {
+      "main": [
+        [
+          {
+            "node": "Filtro de dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro de dados": {
+      "main": [
+        [
+          {
+            "node": "Verifica se o usuário é nosso cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "xAI Grok Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "Verifica usuários ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seguir se novo": {
+      "main": [
+        [
+          {
+            "node": "Para cada usuário ativo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Geração de briefing e card visual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar erro do agente": {
+      "main": [
+        [
+          {
+            "node": "Sistema apresentou erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É nosso cliente?": {
+      "main": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Usuário não é nosso cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica se o usuário é nosso cliente": {
+      "main": [
+        [
+          {
+            "node": "É nosso cliente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica usuários ativos": {
+      "main": [
+        [
+          {
+            "node": "Para cada usuário ativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Para cada usuário ativo": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Eventos do usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eventos do usuário": {
+      "main": [
+        [
+          {
+            "node": "Verifica eventos próximos e válidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica eventos próximos e válidos": {
+      "main": [
+        [
+          {
+            "node": "Ja enviado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ja enviado?": {
+      "main": [
+        [
+          {
+            "node": "Seguir se novo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar lembrete": {
+      "main": [
+        [
+          {
+            "node": "Registrar envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar envio": {
+      "main": [
+        [
+          {
+            "node": "Para cada usuário ativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "xAI Grok Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Geração de briefing e card visual",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Geração de briefing e card visual",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geração de briefing e card visual": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar erro do agente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Enviar lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar padrão sobre o lembrete": {
+      "main": [
+        [
+          {
+            "node": "Registrar envio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar envio1": {
+      "main": [
+        [
+          {
+            "node": "Para cada usuário ativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar erro do agente1": {
+      "main": [
+        [
+          {
+            "node": "Enviar padrão sobre o lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "793bb699-547a-4cdd-a874-cc861d6ae226",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "be90f88d0b77a412be4d3207f37248f8cbf08cfb848ef3e175e6566fd2343d7a"
+  },
+  "nodeGroups": [],
+  "id": "d9alH4GqpfMgS21i",
+  "tags": []
+}
