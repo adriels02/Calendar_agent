@@ -1,6 +1,6 @@
 # Calendario WhatsApp
 
-Assistente de agenda no WhatsApp. A pessoa conversa com o número conectado na Evolution API, o n8n entende o pedido e usa o Google Calendar. A cada 5 minutos, o mesmo fluxo avisa os clientes ativos sobre compromissos que começam em 30 minutos.
+Assistente de agenda no WhatsApp. A pessoa conversa com o número conectado na Evolution API, o n8n entende o pedido e usa o Google Calendar. A cada 5 minutos, o mesmo fluxo avisa os clientes ativos sobre compromissos que começam em um intervalo de 30 minutos.
 
 O workflow importável está em `workflows/Calendario WhatsApp.json`.
 
@@ -12,8 +12,8 @@ O workflow importável está em `workflows/Calendario WhatsApp.json`.
 |---|---|---|
 | n8n | Workflow | `http://localhost:5678` |
 | Evolution API | WhatsApp | `http://localhost:8080` |
-| Postgres | Banco da Evolution | só dentro da rede Docker |
-| Redis | Cache da Evolution | só dentro da rede Docker |
+| Postgres | Banco da Evolution | requisito para Evolution API |
+| Redis | Cache da Evolution | requisito para Evolution API |
 
 O fuso dos containers é `America/Sao_Paulo`. O n8n fica no volume `n8n_data`.
 
@@ -31,7 +31,7 @@ Quem não é cliente ativo recebe um convite para cadastro. Falha do agente e o 
 
 ## Lembretes
 
-A cada 5 minutos o fluxo lê os usuários ativos. Para cada um, busca na agenda dele os eventos das próximas 35 minutos, em `America/Recife`, incluindo ocorrências de eventos recorrentes.
+A cada 5 minutos o fluxo lê os usuários ativos. Para cada um, busca na agenda dele os eventos dos próximos 30 minutos, em `America/Recife`, incluindo ocorrências de eventos recorrentes.
 
 Ignora dia inteiro e evento cancelado. Envia o lembrete quando faltam 30 minutos para o início e o compromisso ainda não começou. A instância da Evolution nesse envio é `Agent_Calendar`.
 
