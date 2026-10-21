@@ -35,9 +35,9 @@ A cada 5 minutos o fluxo lê os usuários ativos. Para cada um, busca na agenda 
 
 Ignora dia inteiro e evento cancelado. Envia o lembrete quando faltam 30 minutos para o início e o compromisso ainda não começou. A instância da Evolution nesse envio é `Agent_Calendar`.
 
-Antes de enviar, consulta `reminder_sent` pelo id do evento e pelo horário daquela ocorrência. Se o aviso já saiu, passa para o próximo. Se não, um segundo agente monta categoria, briefing e texto. O WhatsApp recebe essa mensagem e o envio é registrado, com o id da mensagem quando a Evolution devolve.
+Antes de enviar, consulta `reminder_sent` pelo id do evento e pelo horário daquela ocorrência. Se o aviso já saiu, passa para o próximo. Se não, um segundo modelo monta categoria, briefing e texto em um card visual para o usuário. O WhatsApp recebe essa mensagem e o envio é registrado, com o id da mensagem quando a Evolution devolve.
 
-Se a geração do briefing falhar, o compromisso ainda é avisado por uma mensagem padrão. O detalhe está em [Logs e erros](#logs-e-erros).
+Se a geração do briefing ou montagem do card falhar, o compromisso ainda é avisado por uma mensagem padrão. O detalhe está em [Logs e erros](#logs-e-erros).
 
 ## Logs e erros
 
@@ -112,9 +112,9 @@ CREATE TABLE public.agent_errors (
 
 Integrar uma base real de clientes, ou acrescentar um fluxo de cadastro no primeiro contato. Hoje quem não está em `users` só recebe o convite para se cadastrar.
 
-Gerar a imagem do briefing. O agente do lembrete já devolve o prompt em `visual_prompt`. O passo que falta é usar esse texto em outro nó, gerar a imagem e enviá-la no WhatsApp junto com o aviso.
+A imagem do card visual ser hospedada em servidor próprio ao invés de ser no de terceiros.
 
-Avaliar o quanto o modelo acerta. Os testes iniciais foram positivos, mas sem métrica não dá para saber a taxa de acerto. Um dos focos é produzir essas medidas:
+Avaliar o quanto o modelo acerta. Os testes iniciais foram positivos, mas sem métricas não dá para saber a taxa de acerto. Um dos focos é produzir essas medidas:
 
 - Classificação manual, com acurácia e F1-score.
 - Avaliação por LLM: um modelo generativo atua como juiz e classifica o resultado como 0 ou 1.
