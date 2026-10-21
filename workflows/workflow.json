@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Antes de ativar\n\n1. No nó Chat Model, selecione a credencial e modelo desejado.\n2. Nos quatro nós do Google Calendar, conecte a mesma credencial Google Calendar OAuth2. A agenda usada é a principal da conta (`primary`).\n3. Crie uma credencial Header Auth com o nome do header `apikey` e a chave da Evolution API. Selecione essa credencial no nó Enviar WhatsApp.\n4. Na Evolution, envie o evento MESSAGES_UPSERT para `http://localhost:5678/webhook/whatsapp`.\n5. Ative este workflow.\n\nOs compromissos ficam na conta Google conectada. Reiniciar o Docker não apaga a agenda.",
+        "content": "## Antes de ativar\n\n1. No nó Chat Model, selecione a credencial e modelo desejado.\n2. Nos quatro nós do Google Calendar, conecte a mesma credencial Google Calendar OAuth2. A agenda usada é a principal da conta (`primary`).\n3. Acesse o endereço `http://localhost:8080/manager/` e conecte o whatsapp desejado pelo qr-code\n4. Crie uma credencial Header Auth com o nome do header `apikey` e a chave da Evolution API. Selecione essa credencial no nó Enviar WhatsApp.\n5. Na Evolution, envie o evento MESSAGES_UPSERT para `http://localhost:5678/webhook/whatsapp`.\n6. Ative este workflow.\n\nOs compromissos ficam na conta Google conectada. Reiniciar o Docker não apaga a agenda.",
         "height": 304,
         "width": 560,
         "color": 4
@@ -13,16 +13,16 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -320,
+        -384,
         208
       ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.user_message }}",
+        "text": "={{ $('Filtro de dados').item.json.user_message }}",
         "options": {
-          "systemMessage": "=Você é um assistente de calendário pessoal, gentil, prestativo e conversacional. Fale sempre em português brasileiro, utilizando uma linguagem natural, leve e amigável, como alguém que ajuda o usuário a organizar sua rotina no dia a dia.\n\nEstilo de comunicação:\n\nSeja simpático e direto, sem parecer robótico ou excessivamente formal.\n\nUse frases naturais e fluidas, evitando respostas mecânicas ou repetitivas.\n\nUtilize o nome do usuário ({{ $json.user_name }})  apenas quando fizer sentido na conversa. Nunca o mencione em todas as respostas nem o utilize sem necessidade.\n\nDemonstre disposição para ajudar, utilizando expressões naturais como \"Claro!\", \"Combinado!\", \"Sem problemas!\" e \"Vamos organizar isso\".\n\nEvite exagerar nas saudações, nos elogios, nas exclamações ou na cordialidade artificial.\n\nAdapte o tamanho da resposta à situação. Prefira respostas curtas para confirmações simples e respostas mais detalhadas quando necessário.\n\nComportamento como assistente de calendário:\n\nAjude o usuário a criar, consultar, atualizar e cancelar eventos e compromissos.\n\nConfirme as ações realizadas de maneira clara e natural, destacando as informações relevantes, como data, horário e título do evento.\n\nAo conversar sobre compromissos, priorize a praticidade e a clareza.\n\nSe faltar alguma informação necessária para executar uma ação, faça uma pergunta objetiva e amigável.\n\nNão repita informações que o usuário já forneceu, a menos que seja necessário para confirmar uma ação.\n\nNunca afirme que criou, alterou ou cancelou um evento sem que a operação tenha sido efetivamente concluída.\n\nObjetivo principal: fazer com que o usuário sinta que está conversando com um assistente pessoal acessível e eficiente, e não com um sistema automatizado que apenas executa comandos.\n\nAgora: {{ $now.setZone('America/Sao_Paulo').setLocale('pt-BR').toFormat('cccc, dd/LL/yyyy HH:mm') }} (horário de Brasília, UTC-3).\nA agenda é o Google Calendar. Use só estas ferramentas: listar_eventos, criar_evento, alterar_evento e apagar_evento.\nSe a pessoa só estiver conversando, responda em texto, sem ferramenta.\nHoje, amanhã e dias da semana você calcula a partir do agora. Não peça para confirmar a data.\nDatas nas ferramentas vão em ISO 8601 com offset -03:00.\nAntes de criar, chame listar_eventos no mesmo intervalo. Se já houver compromisso cruzando o horário, conte o conflito e só chame criar_evento depois que a pessoa confirmar.\nSe o fim não for dito, o fim é uma hora depois do início.\nPara alterar ou apagar, use o id do evento. Se não souber o id, liste antes, mas não envie o id para o usuário. \nAo alterar, repita título, início e fim quando eles não mudarem.\nDepois da ferramenta, confirme em uma frase curta, com dia, hora e id. \nEm caso de não conseguir realizar alguma operação por algum motivo, peça desculpas e fale que não pôde realizar a operação e incentive o usuário a tentar novamente ou fazer outra operação.\n\nClassificação e preparação para compromissos\n\nQuando o usuário criar, consultar ou conversar sobre um compromisso, identifique o tipo de evento com base nas informações disponíveis.\n\nCategorias possíveis:\n\nReunião\n\nEstudo\n\nViagem\n\nEntrevista\n\nConsulta\n\nTarefa pessoal\n\nEvento social\n\nOutro\n\nNão force uma classificação quando não houver informações suficientes. Nesse caso, utilize \"Outro\" ou uma categoria genérica adequada.\n\nBriefing de preparação\n\nQuando for útil para o usuário, ofereça ou produza um briefing curto e contextualizado para ajudá-lo a se preparar para o compromisso.\n\nO briefing deve:\n\nExplicar brevemente o objetivo aparente do compromisso.\n\nSugerir de 2 a 4 pontos práticos de preparação, conforme o contexto.\n\nConsiderar o título, a descrição, a data e outras informações realmente disponíveis.\n\nSer objetivo, personalizado ao contexto e fácil de ler pelo WhatsApp.\n\nDistinguir fatos conhecidos de sugestões.\n\nNão invente participantes, locais, pautas, documentos ou informações que não foram fornecidos. Se houver pouca informação, faça sugestões genéricas e úteis, sem apresentá-las como fatos.\n\nNão gere um briefing longo para compromissos simples ou quando isso não trouxer benefício. Se o usuário solicitar apenas criar um evento, priorize a criação e a confirmação do compromisso, sem acrescentar conteúdo desnecessário.\n\n",
+          "systemMessage": "=Você é um assistente de calendário pessoal, gentil, prestativo e conversacional. Fale sempre em português brasileiro, utilizando uma linguagem natural, leve e amigável, como alguém que ajuda o usuário a organizar sua rotina no dia a dia.\n\nEstilo de comunicação:\n\nSeja simpático e direto, sem parecer robótico ou excessivamente formal.\n\nUse frases naturais e fluidas, evitando respostas mecânicas ou repetitivas.\n\nUtilize o nome do usuário ({{ $('Filtro de dados').item.json.user_name }}) quando fizer sentido na conversa. Nunca o mencione em todas as respostas.\n\nDemonstre disposição para ajudar, utilizando expressões naturais como \"Claro!\", \"Combinado!\", \"Sem problemas!\" e \"Vamos organizar isso\".\n\nEvite exagerar na cordialidade artificial.\n\nAdapte o tamanho da resposta à situação. Prefira respostas curtas para confirmações simples e respostas mais detalhadas quando necessário.\n\nComportamento como assistente de calendário:\n\nAjude o usuário a criar, consultar, atualizar e cancelar eventos e compromissos.\n\nConfirme as ações realizadas de maneira clara e natural, destacando as informações relevantes, como data, horário e título do evento.\n\nAo conversar sobre compromissos, priorize a praticidade e a clareza.\n\nSe faltar alguma informação necessária para executar uma ação, faça uma pergunta objetiva e amigável.\n\nNão repita informações que o usuário já forneceu, a menos que seja necessário para confirmar uma ação.\n\nNunca afirme que criou, alterou ou cancelou um evento sem que a operação tenha sido efetivamente concluída.\n\nObjetivo principal: fazer com que o usuário sinta que está conversando com um assistente pessoal acessível e eficiente, e não com um sistema automatizado que apenas executa comandos.\n\nAgora: {{ $now.setZone('America/Sao_Paulo').setLocale('pt-BR').toFormat('cccc, dd/LL/yyyy HH:mm') }} (horário de Brasília, UTC-3).\nA agenda é o Google Calendar. Use só estas ferramentas: listar_eventos, criar_evento, alterar_evento e apagar_evento.\nSe a pessoa só estiver conversando, responda em texto, sem ferramenta.\nHoje, amanhã e dias da semana você calcula a partir do agora. Não peça para confirmar a data.\nDatas nas ferramentas vão em ISO 8601 com offset -03:00.\nAntes de criar ou para perguntas que envolva a existencia ou não de eventos, chame listar_eventos no mesmo intervalo, não confie no histórico da conversa. Se já houver compromisso cruzando o horário, conte o conflito e só chame criar_evento depois que a pessoa confirmar.\nSe o fim não for dito, o fim é uma hora depois do início.\nPara alterar ou apagar, use o id do evento. Se não souber o id, liste antes, mas não envie o id para o usuário. \nAo alterar, repita título, início e fim quando eles não mudarem.\nDepois da ferramenta, confirme em uma frase curta, com dia, hora. \nEm caso de não conseguir realizar alguma operação por algum motivo, peça desculpas e fale que não pôde realizar a operação e incentive o usuário a tentar novamente ou fazer outra operação.\n\nClassificação e preparação para compromissos\n\nQuando o usuário criar, consultar ou conversar sobre um compromisso, identifique o tipo de evento com base nas informações disponíveis.\n\nCategorias possíveis:\n\nReunião\n\nEstudo\n\nViagem\n\nEntrevista\n\nConsulta\n\nTarefa pessoal\n\nEvento social\n\nOutro\n\nNão force uma classificação quando não houver informações suficientes. Nesse caso, utilize \"Outro\" ou uma categoria genérica adequada.\n\n\nE não envie para o usuário o Id do evento\n",
           "maxIterations": 6
         }
       },
@@ -229,26 +229,6 @@
     },
     {
       "parameters": {
-        "model": "grok-4.3",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        1136,
-        656
-      ],
-      "id": "57efea37-a2cb-48a7-b3f2-0611cb326608",
-      "name": "xAI Grok Chat Model",
-      "credentials": {
-        "xAiApi": {
-          "id": "tPXYujsDLSarS1Jt",
-          "name": "xAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO agent_errors (instance, user_contact, user_name, user_message, error_message, error_description)\nVALUES ($1, $2, $3, $4, $5, $6);",
         "options": {
@@ -274,12 +254,12 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $json.user_contact }}"
+        "sessionKey": "={{ $('Filtro de dados').item.json.user_contact }}"
       },
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.4,
       "position": [
-        1296,
+        1280,
         640
       ],
       "id": "e5d0d041-fba4-4f2a-9863-7ccfb34043c1",
@@ -583,16 +563,18 @@
     {
       "parameters": {
         "resource": "messages-api",
+        "operation": "send-image",
         "instanceName": "={{ $('Verifica eventos próximos e válidos').item.json.instance }}",
         "remoteJid": "={{ $('Verifica usuários ativos').item.json.number }}",
-        "messageText": "=\n{{\n  $json.whatsapp_text\n  + '\\n\\n📌 Categoria: ' + $json.category\n  + '\\n\\n📝 Para se preparar:\\n' + $json.briefing\n}}\n",
+        "media": "={{ $json.url }}",
+        "caption": "={{ JSON.parse($('Padroniza a resposta do modelo').item.json.output).whatsapp_text }}",
         "options_message": {}
       },
       "type": "n8n-nodes-evolution-api.evolutionApi",
       "typeVersion": 1,
       "position": [
-        2960,
-        1120
+        3328,
+        1136
       ],
       "id": "230b38ce-4b20-4d4d-b9ed-9ef3d7361791",
       "name": "Enviar lembrete",
@@ -608,7 +590,7 @@
         "operation": "executeQuery",
         "query": "INSERT INTO reminder_sent (event_id, occurrence_start, message_id, summary, number)\nVALUES ($1, $2::timestamptz, $3, $4, $5);",
         "options": {
-          "queryReplacement": "={{ [\n  $('Ja enviado?').item.json.event_id,\n  $('Ja enviado?').item.json.occurrence_start,\n  $json.key?.id || '',\n  $('Ja enviado?').item.json.summary,\n  $('Ja enviado?').item.json.number\n] }}"
+          "queryReplacement": "={{ [\n  $('Ja enviado?').item.json.event_id,\n  $('Ja enviado?').item.json.occurrence_start,\n  $json.key?.id || '',\n  $('Ja enviado?').item.json.summary,\n  $('Verifica usuários ativos').item.json.number\n] }}"
         }
       },
       "id": "0493cdfd-3356-42ef-812b-46d1af382c00",
@@ -616,32 +598,13 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        3280,
+        3712,
         1360
       ],
       "credentials": {
         "postgres": {
           "id": "zS19hZvIhhGP8qhU",
           "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatXAiGrok",
-      "typeVersion": 1,
-      "position": [
-        2096,
-        1312
-      ],
-      "id": "aacc66af-3a3b-4664-be17-0137f481d05e",
-      "name": "xAI Grok Chat Model1",
-      "credentials": {
-        "xAiApi": {
-          "id": "MoQvuvbnu8zrBB06",
-          "name": "False"
         }
       }
     },
@@ -668,7 +631,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=\nDados do compromisso:\n\nTítulo: {{ $json.summary }}\nDescrição: {{ $('Verifica eventos próximos e válidos').item.json.description }}\nData: {{ $json.eventDate }}\nHorário: {{ $json.eventTime }}\n\nPrepare o briefing e os conteúdos do lembrete com base nesses dados.\n",
+        "text": "=Dados do compromisso:\n\nTítulo: {{ $json.summary }}\nDescrição: {{ $('Verifica eventos próximos e válidos').item.json.description }}\nData: {{ $('Verifica eventos próximos e válidos').item.json.eventDate }}\nHorário: {{ $('Verifica eventos próximos e válidos').item.json.eventTime }}\n\nPrepare o briefing e os conteúdos do lembrete com base nesses dados.\n\nInstruções para o briefing:\n\nEscreva um texto curto, claro e natural, adequado para um lembrete visual enviado pelo WhatsApp.\n\nUse as informações do compromisso para contextualizar o lembrete.\n\nQuando houver sugestões ou recomendações, coloque-as sempre em uma nova linha, começando por Sugestões:.\n\nNunca escreva Sugestões: na mesma linha do texto principal. Insira uma quebra de linha antes desse rótulo.",
         "options": {
           "systemMessage": "Você é um assistente pessoal responsável por preparar lembretes de compromissos.\n\nAnalise os dados do evento recebidos e produza:\n1. Uma categoria adequada para o compromisso.\n2. Um briefing curto e contextualizado para ajudar o usuário a se preparar.\n3. Uma mensagem amigável para enviar pelo WhatsApp.\n4. Uma descrição visual para um card temático relacionado ao compromisso.\n\nRegras:\n- Responda em português brasileiro.\n- Não invente informações que não estejam nos dados do evento.\n- Use o título e a descrição para identificar o contexto do compromisso.\n- O briefing deve ser breve e conter até 3 sugestões práticas, quando forem úteis.\n- Se não houver contexto suficiente, produza um briefing genérico, sem presumir detalhes.\n- A descrição visual deve orientar a criação de uma imagem temática, sem depender de textos escritos dentro dela.\n- Não afirme que enviou mensagens ou imagens.\n- Retorne somente JSON válido, sem Markdown, com os campos category, briefing, whatsapp_text e visual_prompt.",
           "maxIterations": 6
@@ -687,20 +650,6 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "\nconst item = $input.item.json;\n\n// Identifica onde está o resultado da IA\nlet data = item.output ?? item;\n\n// Se a saída vier como texto, converte para objeto JSON\nif (typeof data === 'string') {\n  // Remove cercas Markdown, caso existam\n  data = data\n    .replace(/^```(?:json)?\\s*/i, '')\n    .replace(/\\s*```$/, '')\n    .trim();\n\n  data = JSON.parse(data);\n}\n\n// Retorna os campos separados e preserva os dados originais\nreturn {\n  json: {\n    ...item,\n    category: data.category,\n    briefing: data.briefing,\n    whatsapp_text: data.whatsapp_text,\n    visual_prompt: data.visual_prompt,\n  },\n};\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2720,
-        1120
-      ],
-      "id": "5e5b0661-4d97-48b1-9dcc-69f9cb478e30",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
         "resource": "messages-api",
         "instanceName": "={{ $('Verifica eventos próximos e válidos').item.json.instance }}",
         "remoteJid": "={{ $('Verifica usuários ativos').item.json.number }}",
@@ -710,8 +659,8 @@
       "type": "n8n-nodes-evolution-api.evolutionApi",
       "typeVersion": 1,
       "position": [
-        2736,
-        1312
+        3152,
+        1360
       ],
       "id": "13798ab7-23bb-4e4d-8aa2-c9d3b7e97522",
       "name": "Enviar padrão sobre o lembrete",
@@ -735,7 +684,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        2944,
+        3360,
         1360
       ],
       "credentials": {
@@ -756,8 +705,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        2528,
-        1216
+        2960,
+        1360
       ],
       "id": "b29e8815-71c1-4cd4-8ab3-bd938584ec4d",
       "name": "Registrar erro do agente1",
@@ -768,6 +717,132 @@
         }
       },
       "notes": "Selecione a credencial Postgres do banco que você vai usar. A tabela agent_errors precisa existir antes."
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    * {\n      box-sizing: border-box;\n    }\n\n    body {\n      margin: 0;\n      font-family: Arial, sans-serif;\n      color: white;\n    }\n\n    .card {\n      width: 600px;\n      height: 450px;\n      padding: 42px;\n      display: flex;\n      flex-direction: column;\n      justify-content: flex-end;\n      gap: 22px;\n      background:\n        linear-gradient(\n          to bottom,\n          rgba(5, 15, 35, 0.15),\n          rgba(5, 15, 35, 0.94)\n        ),\n        url(\"https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=900\")\n        center / cover;\n    }\n\n    .label {\n      font-size: 16px;\n      text-transform: uppercase;\n      letter-spacing: 2px;\n      color: #FFFFFF;\n    }\n\n    h1 {\n      font-size: 42px;\n      line-height: 1.15;\n      overflow-wrap: anywhere;\n      margin: 0;\n    }\n\n    .date {\n      font-size: 22px;\n    }\n\n    .briefing {\n      font-size: 19px;\n      line-height: 1.5;\n      white-space: pre-line;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"label\">{{ $json.category }}</div>\n    <h1>{{ $('Verifica eventos próximos e válidos').item.json.summary }}</h1>\n    <div class=\"date\">\n      {{ $('Verifica eventos próximos e válidos').item.json.eventDate }} · {{ $('Verifica eventos próximos e válidos').item.json.eventTime }}\n    </div>\n    <div class=\"briefing\"> {{ $json.briefing }}</div>\n  </div>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        2736,
+        1056
+      ],
+      "id": "18510794-eb84-4a16-8790-9fb3f2abe830",
+      "name": "Template Lembrete",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://app.html2img.com/api/html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Key",
+              "value": "htim_vkylhjGDgX4sVOZrdT49OWAun8AITz7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "width",
+              "value": "600"
+            },
+            {
+              "name": "height",
+              "value": "450"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2960,
+        1040
+      ],
+      "id": "d15f359a-cf23-46c3-b6d5-76191d5164ac",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\n\n// Identifica onde está o resultado da IA\nlet data = item.output ?? item;\n\n// Se a saída vier como texto, converte para objeto JSON\nif (typeof data === 'string') {\n  // Remove cercas Markdown, caso existam\n  data = data\n    .replace(/^```(?:json)?\\s*/i, '')\n    .replace(/\\s*```$/, '')\n    .trim();\n\n  data = JSON.parse(data);\n}\n\n// Retorna os campos necessários para o lembrete e o card\nreturn {\n  json: {\n    ...item,\n    category: data.category,\n    briefing: data.briefing,\n    whatsapp_text: data.whatsapp_text,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        1056
+      ],
+      "id": "5e5b0661-4d97-48b1-9dcc-69f9cb478e30",
+      "name": "Padroniza a resposta do modelo"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-4-turbo"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1120,
+        608
+      ],
+      "id": "857fb535-d77c-4755-9c5c-bc620fb50b78",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "W2JbRBrSAWLqqfrE",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-4-turbo"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        1312
+      ],
+      "id": "6cbaa0ae-0d41-4d0a-bbe8-b0957b764bfe",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "W2JbRBrSAWLqqfrE",
+          "name": "OpenAI account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -851,17 +926,6 @@
           {
             "node": "Verifica se o usuário é nosso cliente",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "xAI Grok Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Agente de calendario",
-            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -1025,17 +1089,6 @@
         ]
       ]
     },
-    "xAI Grok Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Geração de briefing e card visual",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Postgres Chat Memory1": {
       "ai_memory": [
         [
@@ -1051,7 +1104,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Padroniza a resposta do modelo",
             "type": "main",
             "index": 0
           }
@@ -1059,17 +1112,6 @@
         [
           {
             "node": "Registrar erro do agente1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Enviar lembrete",
             "type": "main",
             "index": 0
           }
@@ -1108,6 +1150,75 @@
           }
         ]
       ]
+    },
+    "Template Lembrete": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar erro do agente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Enviar lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar erro do agente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Padroniza a resposta do modelo": {
+      "main": [
+        [
+          {
+            "node": "Template Lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de calendario",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Geração de briefing e card visual",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -1115,7 +1226,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "793bb699-547a-4cdd-a874-cc861d6ae226",
+  "versionId": "2753d75f-61be-4c08-bae4-7aa4d710cebb",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "be90f88d0b77a412be4d3207f37248f8cbf08cfb848ef3e175e6566fd2343d7a"
